@@ -1,0 +1,10 @@
+numpy
+matplotlib
+scipy
+astropy
+dill
+la_forge
+tqdm
+pandas
+pyarrow
+
