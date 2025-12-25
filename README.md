@@ -2,13 +2,33 @@
 
 This repository implements a **Fourier-domain PTA detection statistic** together with **right-tail p-value evaluation** under $H_0$ using **Imhof’s method** (generalized $\chi^2$). It also includes a lightweight `get_phi` implementation (`PTA_Lite`) to avoid `enterprise`-level constraints, while keeping the same $\phi$-structure: per-pulsar red noise (RN) + a common GW process with optional Hellings–Downs correlations.
 
+> **Note (current repo layout):** all core implementations live inside Jupyter notebooks under `My Coding/`.
+> To reproduce results, run the notebooks in the order listed in **Quickstart** below.
+
 ---
 
-## What’s inside
+## Repository layout
 
-### 1) Portable parameter dump (`param_list.txt` + `chain_1.txt` → `samples.json`)
+- `My Coding/`
+  - `Initial Import.ipynb` (imports + basic setup)
+  - `get_phi function.ipynb` (defines `PTA_Lite`, `_rho_flat_tail`, `hellings_downs_orf`, and helpers)
+  - `Fourier Detection Statistics.ipynb` (defines `FourierDetectionStatistic` and computes `os_val, y, Q, Sigma_y`)
+  - `p value.ipynb` (defines `imhof`, `gx2cdf`, `spectral_and_pvalue_from_yQ`, and optional GX$^2$ PDF plotting)
+- `some sample data that you can pl.../`
+  - `param_list.txt`
+  - `chain (just try the last few eleme...).txt`
+- Root
+  - `pta_model_gpta_2.feather`
+  - `requirements.txt`
+  - `README.md`
+
+---
+
+## What’s inside (conceptually)
+
+### 1) Portable parameter dump (`param_list.txt` + chain → `samples.json`)
 - Reads parameter names from `param_list.txt`
-- Reads the chain matrix from `chain_1.txt`
+- Reads the chain matrix from the provided chain text file
 - Aligns columns (default: `align="left"`) and writes a list of dict samples to `samples.json`  
   (parameter-name → float value, one dict per sample)
 
@@ -87,71 +107,9 @@ Given `Q`, `Sigma_y`, and observed `os_val`, the p-value routine:
 Main function:
 - `spectral_and_pvalue_from_yQ(Q, Sigma_y, os_val, ...) -> p_right`
 
-### 6) (Optional) Demo: plot GX² PDF under $H_0$
-`plot_pdf(Q, Sigma_y, os_val, ...)` evaluates the GX² PDF (via `gx2pdf`) and marks `os_val` and the mean $\mu=\sum\lambda$.
+### 6) (Optional) Demo: plot GX$^2$ PDF under $H_0$
+`plot_pdf(Q, Sigma_y, os_val, ...)` evaluates the GX$^2$ PDF (via `gx2pdf`) and marks `os_val` and the mean $\mu=\sum\lambda$.
 
 ---
 
-## Quickstart (minimal working flow)
-
-### Step 0: Install deps
-The code imports (at least): `numpy`, `scipy`, `matplotlib`, `pandas`, `pyarrow`, `astropy`, `dill`, `tqdm`, and your environment extras such as `la_forge`.
-
-### Step 1: Export samples to JSON
-Input files:
-- `param_list.txt`
-- `chain (just try the last few elements) .txt`
-
-Run the provided script section to generate:
-- `samples.json`
-
-### Step 2: Load your `pta_model`
-You need a `pta_model` dict keyed by pulsar name, containing the required fields listed above.  
-(Feather helpers are provided for portable storage.)
-
-### Step 3: Build $\phi$ providers (H0/H1)
-~~~python
-K = next(iter(pta_model.values()))['nfrequencies']
-pta_h0 = PTA_Lite(pta_model, mode='curn', components=K, gw_components=5, rn_name='red_noise')
-pta_h1 = PTA_Lite(pta_model, mode='hd',   components=K, gw_components=5, rn_name='red_noise')
-~~~
-
-### Step 4: Compute detection statistic and p-value
-~~~python
-par_dict = big_array[-1]  # any sample dict (e.g. from samples.json)
-
-os_fourier = FourierDetectionStatistic(
-    pta_h0, pta_h1, pta_model,
-    fourier_num=20,
-    proj_method="mask",  # or "svd"
-    tol=1e-30,
-    rel_eps=None,
-    order=None,
-    verbose=False
-)
-
-os_val, y, Q, Sigma_y = os_fourier.get_deflection_coordinates(par_dict)
-
-p_right = spectral_and_pvalue_from_yQ(Q, Sigma_y, os_val)
-print("p-right =", p_right)
-~~~
-
-### Step 5 (optional): visualize GX² PDF
-~~~python
-fig, ax = plot_pdf(Q, Sigma_y, os_val, complex_mode=False, cutoff=1e-12, npts=800)
-plt.show()
-~~~
-
----
-
-## Options you implemented
-
-- `fourier_num`: number of Fourier coefficients per pulsar used in the statistic (you take the **last K** per pulsar)
-- `proj_method="mask"`: selects active support of $\Delta\phi$ (recommended)
-- `proj_method="svd"`: thin-SVD basis (optional)
-- `tol`: threshold for mask support selection
-- `rel_eps`: SVD cutoff scaling (`None` uses `eps * n * smax`)
-- `order`: pulsar ordering for consistent stacking (default: `pta_h0.pulsars`)
-- `complex_mode` (p-value / PDF): duplicates eigenvalues (if you want complex DOF modeling)
-
----
+##
