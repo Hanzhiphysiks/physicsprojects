@@ -106,7 +106,7 @@ Given `Q`, `Sigma_y`, and observed `os_val`, the p-value routine:
 Main function:
 - `spectral_and_pvalue_from_yQ(Q, Sigma_y, os_val, ...) -> p_right`
 
-### 6) (Optional) Demo: plot GX$^2$ PDF under $H_0$
+### 6) (Optional) Demo: plot &GX^2$ PDF under $H_0$
 `plot_pdf(Q, Sigma_y, os_val, ...)` evaluates the GX$^2$ PDF (via `gx2pdf`)  
 and marks `os_val` and the mean $\mu = \sum \lambda$.
 
