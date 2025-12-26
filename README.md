@@ -116,7 +116,7 @@ The notebooks use (at least):
 
 ### Step 1: Prepare sample parameters
 Sample files are provided in  
-- `some sample data that you can play with.txt`:
+`some sample data that you can play with\`:
 - `param_list.txt`
 - a small example chain file
 
